@@ -1,0 +1,7 @@
+# The team below is the CodeOwner of the repository and must approve all PRs to protected branches (i.e. master).  
+# Plese reference the Github Teams page and find the team listed below to see which users are members of the Codeowners team assigned to this repository
+# Changes to the CodeOwners team members require PM approval
+# CODEOWNER Teams can only have FOUR(4) users (per wawa security policy)
+*       @wawa/Engineering_CODEOWNERS
+.gitleaksignore @wawa/security_CODEOWNERS
+CODEOWNERS @wawa/GitHubAdmins
