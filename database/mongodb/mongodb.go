@@ -13,10 +13,10 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/golang-migrate/migrate/v4/database"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/x/mongo/driver/connstring"
 )
 
 func init() {
@@ -157,7 +157,7 @@ func (m *Mongo) Open(dsn string) (database.Driver, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn))
+	client, err := mongo.Connect(options.Client().ApplyURI(dsn))
 	if err != nil {
 		return nil, err
 	}
@@ -263,16 +263,17 @@ func (m *Mongo) Run(migration io.Reader) error {
 }
 
 func (m *Mongo) executeCommandsWithTransaction(ctx context.Context, cmds []bson.D) error {
-	err := m.db.Client().UseSession(ctx, func(sessionContext mongo.SessionContext) error {
-		if err := sessionContext.StartTransaction(); err != nil {
+	err := m.db.Client().UseSession(ctx, func(ctx context.Context) error {
+		sess := mongo.SessionFromContext(ctx)
+		if err := sess.StartTransaction(); err != nil {
 			return &database.Error{OrigErr: err, Err: "failed to start transaction"}
 		}
-		if err := m.executeCommands(sessionContext, cmds); err != nil {
+		if err := m.executeCommands(ctx, cmds); err != nil {
 			// When command execution is failed, it's aborting transaction
 			// If you tried to call abortTransaction, it`s return error that transaction already aborted
 			return err
 		}
-		if err := sessionContext.CommitTransaction(sessionContext); err != nil {
+		if err := sess.CommitTransaction(ctx); err != nil {
 			return &database.Error{OrigErr: err, Err: "failed to commit transaction"}
 		}
 		return nil

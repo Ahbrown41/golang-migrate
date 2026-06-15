@@ -17,9 +17,9 @@ import (
 
 import (
 	"github.com/dhui/dktest"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 import (
@@ -51,7 +51,7 @@ func isReady(ctx context.Context, c dktest.ContainerInfo) bool {
 		return false
 	}
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConnectionString(ip, port)))
+	client, err := mongo.Connect(options.Client().ApplyURI(mongoConnectionString(ip, port)))
 	if err != nil {
 		return false
 	}
@@ -272,7 +272,7 @@ func TestTransaction(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoConnectionString(ip, port)))
+		client, err := mongo.Connect(options.Client().ApplyURI(mongoConnectionString(ip, port)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -352,7 +352,7 @@ func TestTransaction(t *testing.T) {
 		}
 		for _, tcase := range testcases {
 			t.Run(tcase.name, func(t *testing.T) {
-				client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoConnectionString(ip, port)))
+				client, err := mongo.Connect(options.Client().ApplyURI(mongoConnectionString(ip, port)))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -411,7 +411,7 @@ func waitForReplicaInit(client *mongo.Client) error {
 			//during replica set initialization, the first node first becomes a secondary and then becomes the primary
 			//should consider that initialization is completed only after the node has become the primary
 			result := client.Database("admin").RunCommand(context.TODO(), bson.D{bson.E{Key: "isMaster", Value: 1}})
-			r, err := result.DecodeBytes()
+			r, err := result.Raw()
 			if err != nil {
 				return err
 			}
